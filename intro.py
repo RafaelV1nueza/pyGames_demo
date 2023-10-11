@@ -126,6 +126,7 @@ class Points:
                 coord[1] = 0
             if coord[1] > self.game.floor:
                 coord[1] = 0
+                
 
 class Game:
     def __init__(self):
@@ -182,8 +183,6 @@ class Game:
     def update(self):
         self.player.update()
         self.foods.update()
-        #self.PLAYER_SIZE += 1
-        print(self.PLAYER_SIZE)
         pg.display.flip()     #Update display
         self.delta_time = self.clock.tick(self.FPS)
         pg.display.set_caption(f'{self.clock.get_fps() :.1f}')
