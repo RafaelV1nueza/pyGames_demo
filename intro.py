@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
 import math
+import random
 
 class Player:
     def __init__(self,game):
@@ -48,7 +49,11 @@ class Player:
         else:
             self.py = self.ground - self.game.PLAYER_SIZE
         
-
+    def hitbox(self):
+        ox,oy = self.px, self.py
+        size = self.game.PLAYER_SIZE #pz = radius
+        hbx,hby = ox-size,oy-size
+        #pg.draw.rect(self.game.screen,'Red',(hbx,hby,size*2,size*2), 1)
 
     def draw(self):
         pg.draw.circle(self.game.screen,self.game.WHITE,(self.px,self.py),
@@ -91,6 +96,7 @@ class Player:
                                                   self.game.PLAYER_SIZE//8,
                                                   self.game.PLAYER_SIZE//6),0,
                                                   self.game.PLAYER_SIZE//10)
+        self.hitbox()
         
     def update(self):
         self.movement()
@@ -103,7 +109,23 @@ class Points:
     def __init__(self,game):
         self.game = game
         self.ground = (self.game.HEIGHT*2//3 - 10)
+        self.coord_list = []
+        for i in range(9):
+            x = random.randint(0,self.game.WIDTH)
+            y = random.randint(0,self.game.HEIGHT//10)
+            self.coord_list.append([x,y])
 
+    def draw(self):
+        for coord in self.coord_list:
+            pg.draw.circle(self.game.screen,self.game.GREEN,(coord),7)
+
+    def update(self):
+        for coord in self.coord_list:
+            coord[1] += 1
+            if random.randint(0,100) < 1:
+                coord[1] = 0
+            if coord[1] > self.game.floor:
+                coord[1] = 0
 
 class Game:
     def __init__(self):
@@ -120,7 +142,7 @@ class Game:
         self.PLAYER_SIZE = 10
         self.ox, self.oy = self.PLAYER_POS = self.HALF_WIDTH, self.floor - self.PLAYER_SIZE
         self.PLAYER_SPEED = 1.2/math.sqrt(self.PLAYER_SIZE)
-        self.GRAVITY = 0.98 /40
+        self.GRAVITY = 0.98 /20
         
 
         #COLORS
@@ -148,6 +170,7 @@ class Game:
 
     def new_game(self):
         self.player = Player(self)
+        self.foods = Points(self)
 
     def check_event(self):
         ##To exit propperly
@@ -158,6 +181,9 @@ class Game:
     
     def update(self):
         self.player.update()
+        self.foods.update()
+        #self.PLAYER_SIZE += 1
+        print(self.PLAYER_SIZE)
         pg.display.flip()     #Update display
         self.delta_time = self.clock.tick(self.FPS)
         pg.display.set_caption(f'{self.clock.get_fps() :.1f}')
@@ -190,6 +216,7 @@ class Game:
         pg.draw.rect(self.screen,self.GREEN,(a,b,c,d // 10))
         
         self.player.draw()
+        self.foods.draw()
 
     def run(self):
             while True:
