@@ -1,7 +1,8 @@
 # pyGames_demo
 PyGames pip installed
 
-intro.py {
+intro.py 
+---------------------------------------------
   Initiate game in class "Game"
   - pg.init()
   Create Screen with RES resolution
@@ -24,4 +25,4 @@ intro.py {
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 pg.QUIT
                 sys.exit()
-    }
+    
