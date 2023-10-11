@@ -8,7 +8,7 @@ class Player:
           self.px,self.py = self.game.PLAYER_POS
           self.ground = (self.game.floor)
           self.gravity = self.game.GRAVITY
-          self.dy_a = 0
+          self.dy_a = 0 #for gravity
 
     def movement(self):
         dx = 0
@@ -27,13 +27,10 @@ class Player:
         #WOrks well dont touch
         dy += self.gravity
         if self.py < (self.ground - self.game.PLAYER_SIZE) and self.dy_a >= 0:
-            print(self.dy_a)
             t_a = math.sqrt(2*self.dy_a/self.gravity)
             dy = 0.5*self.gravity*(t_a+1)**2
         self.dy_a = dy
-
-        print(dy)
-
+        ##
         self.collision(dx,dy)
 
     def collision(self,dx,dy):
@@ -85,7 +82,7 @@ class Game:
         self.PLAYER_SIZE = 10
         self.ox, self.oy = self.PLAYER_POS = self.HALF_WIDTH, self.floor - self.PLAYER_SIZE
         self.PLAYER_SPEED = 1.5
-        self.GRAVITY = 5
+        self.GRAVITY = 0.98 /40
         
 
         #COLORS
@@ -140,7 +137,7 @@ class Game:
 
     def draw(self):
         #background
-        #self.screen.fill(self.BLUE)
+        self.screen.fill(self.BLUE)
         self.land_create((self.WIDTH*0.8,(2* self.HEIGHT//9)),self.HALF_WIDTH*2//3,1)
         self.land_create((0,(4 * self.HEIGHT//9)),self.HALF_WIDTH*2//3,0)
         self.land_create((self.WIDTH*2//3,(6 * self.HEIGHT//9)),(self.WIDTH//5),1)
