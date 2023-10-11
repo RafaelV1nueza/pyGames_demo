@@ -36,14 +36,14 @@ class Player:
     def collision(self,dx,dy):
         scale = self.game.PLAYER_SIZE / self.game.delta_time
         #para X
-        if 0 < (self.px + dx * scale) < self.game.WIDTH:
+        if 0< (self.px + dx * scale) < self.game.WIDTH:
             self.px += dx
         elif self.px < 0:
             self.px = 0 + self.game.PLAYER_SIZE
         elif self.px > self.game.WIDTH:
             self.px = self.game.WIDTH - self.game.PLAYER_SIZE
         #Para Y
-        if (self.py + dy * scale) < self.ground - self.game.PLAYER_SIZE:
+        if (self.py + dy) < self.ground - self.game.PLAYER_SIZE: #*scale?
             self.py += dy
         else:
             self.py = self.ground - self.game.PLAYER_SIZE
@@ -52,7 +52,45 @@ class Player:
 
     def draw(self):
         pg.draw.circle(self.game.screen,self.game.WHITE,(self.px,self.py),
-                        self.game.PLAYER_SIZE,5)
+                        self.game.PLAYER_SIZE,0)
+        pg.draw.circle(self.game.screen,self.game.BLACK,(self.px,self.py),
+                        self.game.PLAYER_SIZE,self.game.PLAYER_SIZE//10)
+        #ojo izquierdo Left eye
+        pg.draw.rect(self.game.screen,self.game.BLACK,(self.px - self.game.PLAYER_SIZE*3//4,
+                                                  self.py - self.game.PLAYER_SIZE*2//3,
+                                                  self.game.PLAYER_SIZE//2,
+                                                  self.game.PLAYER_SIZE*2//3),
+                                                  self.game.PLAYER_SIZE//10 ,
+                                                  self.game.PLAYER_SIZE//3)
+        pg.draw.rect(self.game.screen,self.game.BLACK,(self.px-self.game.PLAYER_SIZE*4//7,
+                                                  self.py-self.game.PLAYER_SIZE*2//5,
+                                                  self.game.PLAYER_SIZE//4,
+                                                  self.game.PLAYER_SIZE//3),0,
+                                                  self.game.PLAYER_SIZE//8)
+        pg.draw.rect(self.game.screen,self.game.WHITE,(self.px - self.game.PLAYER_SIZE*4//7,
+                                                  self.py-self.game.PLAYER_SIZE*2//5,
+                                                  self.game.PLAYER_SIZE//8,
+                                                  self.game.PLAYER_SIZE//6),0,
+                                                  self.game.PLAYER_SIZE//10)
+        
+        
+        #ojo derecho Right eye
+        pg.draw.rect(self.game.screen,self.game.BLACK,(self.px + self.game.PLAYER_SIZE*1//4,
+                                                  self.py - self.game.PLAYER_SIZE*2//3,
+                                                  self.game.PLAYER_SIZE//2,
+                                                  self.game.PLAYER_SIZE*2//3),
+                                                  self.game.PLAYER_SIZE//10 ,
+                                                  self.game.PLAYER_SIZE//3)
+        pg.draw.rect(self.game.screen,self.game.BLACK,(self.px + self.game.PLAYER_SIZE*2//7,
+                                                  self.py - self.game.PLAYER_SIZE*2//5,
+                                                  self.game.PLAYER_SIZE//4,
+                                                  self.game.PLAYER_SIZE//3),0,
+                                                  self.game.PLAYER_SIZE//8)
+        pg.draw.rect(self.game.screen,self.game.WHITE,(self.px + self.game.PLAYER_SIZE*3//7,
+                                                  self.py-self.game.PLAYER_SIZE*2//5,
+                                                  self.game.PLAYER_SIZE//8,
+                                                  self.game.PLAYER_SIZE//6),0,
+                                                  self.game.PLAYER_SIZE//10)
         
     def update(self):
         self.movement()
@@ -81,12 +119,13 @@ class Game:
         #Player Settings
         self.PLAYER_SIZE = 10
         self.ox, self.oy = self.PLAYER_POS = self.HALF_WIDTH, self.floor - self.PLAYER_SIZE
-        self.PLAYER_SPEED = 1.5
+        self.PLAYER_SPEED = 1.2/math.sqrt(self.PLAYER_SIZE)
         self.GRAVITY = 0.98 /40
         
 
         #COLORS
         self.WHITE   = (255, 255, 255)
+        self.BLACK   = (  0,   0,   0)
         self.BLUE    = ( 51, 153, 255)
         self.GREEN   = (  0, 102,   0)
         self.DIRT    = ( 77,  38,   0)
@@ -126,14 +165,16 @@ class Game:
     def land_create(self,corner_1,corner_2,shade):
         a,b = corner_1
         c = corner_2
+        d = (self.floor-b)
+        round = d // 20
         if shade:
-            pg.draw.rect(self.screen,self.DIRT_1,(a,b,c,(self.floor-b)))
-            pg.draw.rect(self.screen,self.WET_DIRT_1,(a,b,c,(self.floor-b) // 4))
-            pg.draw.rect(self.screen,self.GREEN_1,(a,b,c,(self.floor-b) // 10))
+            pg.draw.rect(self.screen,self.DIRT_1,(a,b,c,d),0 ,-1,round,round)
+            pg.draw.rect(self.screen,self.WET_DIRT_1,(a,b,c,d // 4),0 ,-1,round,round)
+            pg.draw.rect(self.screen,self.GREEN_1,(a,b,c,d // 10),0 ,-1,round,round)
         else:
-            pg.draw.rect(self.screen,self.DIRT_2,(a,b,c,(self.floor-b)))
-            pg.draw.rect(self.screen,self.WET_DIRT_2,(a,b,c,(self.floor-b) // 4))
-            pg.draw.rect(self.screen,self.GREEN_2,(a,b,c,(self.floor-b) // 10))
+            pg.draw.rect(self.screen,self.DIRT_2,(a,b,c,(self.floor-b)),0 ,-1,round,round)
+            pg.draw.rect(self.screen,self.WET_DIRT_2,(a,b,c,(self.floor-b) // 4),0 ,-1,round,round)
+            pg.draw.rect(self.screen,self.GREEN_2,(a,b,c,(self.floor-b) // 10),0 ,-1,round,round)
 
     def draw(self):
         #background
