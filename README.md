@@ -1,8 +1,7 @@
 # pyGames_demo
 PyGames pip installed
 
-intro.py 
----------------------------------------------
+# intro.py 
   Initiate game in class "Game"
   - pg.init()
   Create Screen with RES resolution
