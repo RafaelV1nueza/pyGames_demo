@@ -10,7 +10,9 @@ class Player:
           self.ground = (self.game.floor)
           self.gravity = self.game.GRAVITY
           self.dy_a = 0 #for gravity
-
+          self.max_stamina = self.game.PLAYER_STAMINA * 100 /self.game.PLAYER_SIZE
+          self.stamina = self.max_stamina
+          self.tired = 0
     def movement(self):
         dx = 0
         dy = 0
@@ -22,8 +24,22 @@ class Player:
             dx -= speed
         if keys[pg.K_d] or keys[pg.K_RIGHT]:
             dx += speed
-        if keys[pg.K_w] or keys[pg.K_UP]:
+        if (keys[pg.K_w] or keys[pg.K_UP]) and not self.tired:
             dy -= speed
+
+        #Stamina mod
+        if dy < 0: #(self.ground - self.game.PLAYER_SIZE):
+            if self.stamina > 0:
+                self.stamina -= 1
+        elif self.py == (self.ground - self.game.PLAYER_SIZE):
+            if self.stamina < self.max_stamina:
+                self.stamina += 1
+            elif self.stamina == self.max_stamina:
+                self.tired = 0
+        if self.stamina == 0:
+            self.tired = 1
+
+
         #Gravity logic without any tutorial wuuuuuuuuu
         #WOrks well dont touch
         dy += self.gravity
@@ -54,6 +70,27 @@ class Player:
         size = self.game.PLAYER_SIZE #pz = radius
         hbx,hby = ox-size,oy-size
         #pg.draw.rect(self.game.screen,'Red',(hbx,hby,size*2,size*2), 1)
+        self.HB_player = [hbx,hby,hbx + size * 2,hby + size * 2]
+
+    def stamina_draw(self):
+        if self.tired:
+            pg.draw.rect(self.game.screen,self.game.YELLOW,(self.game.WIDTH//3,self.ground + self.game.HEIGHT//10,
+                                                    (self.stamina/self.max_stamina)*self.game.WIDTH//3,
+                                                    self.game.HEIGHT//20),0,
+                                                    self.game.HEIGHT//100)
+        else:
+            pg.draw.rect(self.game.screen,self.game.LIME,(self.game.WIDTH//3,self.ground + self.game.HEIGHT//10,
+                                                    (self.stamina/self.max_stamina)*self.game.WIDTH//3,
+                                                    self.game.HEIGHT//20),0,
+                                                    self.game.HEIGHT//100)
+            
+        pg.draw.rect(self.game.screen,self.game.BLACK,(self.game.WIDTH//3,self.ground + self.game.HEIGHT//10,
+                                                  (self.stamina/self.max_stamina)*self.game.WIDTH//3,
+                                                  self.game.HEIGHT//20),2,
+                                                  self.game.HEIGHT//100)
+        
+
+
 
     def draw(self):
         pg.draw.circle(self.game.screen,self.game.WHITE,(self.px,self.py),
@@ -96,10 +133,12 @@ class Player:
                                                   self.game.PLAYER_SIZE//8,
                                                   self.game.PLAYER_SIZE//6),0,
                                                   self.game.PLAYER_SIZE//10)
-        self.hitbox()
         
+        self.stamina_draw()
+
     def update(self):
         self.movement()
+        self.hitbox()
 
     @property 
     def pos(self):
@@ -110,24 +149,53 @@ class Points:
         self.game = game
         self.ground = (self.game.HEIGHT*2//3 - 10)
         self.coord_list = []
-        for i in range(9):
+        self.food_points = 10
+        self.bad_points = self.food_points // (10/self.game.DIFFICULTY)
+        for i in range(self.food_points):
             x = random.randint(0,self.game.WIDTH)
             y = random.randint(0,self.game.HEIGHT//10)
             self.coord_list.append([x,y])
+        self.bad_coord_list = []
+        for i in range(5):
+            x = random.randint(0,self.game.WIDTH)
+            y = random.randint(0,self.game.HEIGHT//10)
+            self.bad_coord_list.append([x,y])
+
 
     def draw(self):
-        for coord in self.coord_list:
+        for coord in self.coord_list: 
             pg.draw.circle(self.game.screen,self.game.GREEN,(coord),7)
+        
+        for coord in self.bad_coord_list:
+            pg.draw.circle(self.game.screen,self.game.RED,(coord),5)
 
     def update(self):
-        for coord in self.coord_list:
+        for index, coord in enumerate(self.coord_list):
             coord[1] += 1
-            if random.randint(0,100) < 1:
-                coord[1] = 0
-            if coord[1] > self.game.floor:
-                coord[1] = 0
-                
+            if (self.game.player.HB_player[0] < coord[0] < self.game.player.HB_player[2]) and (self.game.player.HB_player[1] < coord[1] < self.game.player.HB_player[3]):
+                del self.coord_list[index]
+                self.game.PLAYER_SIZE += 10
+                self.game.PLAYER_POINTS += 1
+            else:
+                if random.randint(0,100) < 1:
+                    coord[1] = 0
+                if coord[1] > self.game.floor:
+                    coord[1] = 0
 
+        for i_bad, coord_bad in enumerate(self.bad_coord_list):
+            coord_bad[1] += 1
+            if (self.game.player.HB_player[0] < coord_bad[0] < self.game.player.HB_player[2]) and (self.game.player.HB_player[1] < coord_bad[1] < self.game.player.HB_player[3]):
+                del self.bad_coord_list[i_bad]
+                if self.game.PLAYER_SIZE <=20:
+                    self.game.PLAYER_LIFE = 0
+                else:
+                    self.game.PLAYER_SIZE -= 20
+            else:
+                if random.randint(0,100) < 1:
+                    coord_bad[1] = 0
+                if coord_bad[1] > self.game.floor:
+                    coord_bad[1] = 0
+            
 class Game:
     def __init__(self):
           
@@ -139,11 +207,17 @@ class Game:
         self.HALF_WIDTH = self.WIDTH //2
         self.FPS = 60
         self.floor = self.HEIGHT*4//5 - 10
+        self.DIFFICULTY= 5
         #Player Settings
         self.PLAYER_SIZE = 10
         self.ox, self.oy = self.PLAYER_POS = self.HALF_WIDTH, self.floor - self.PLAYER_SIZE
         self.PLAYER_SPEED = 1.2/math.sqrt(self.PLAYER_SIZE)
         self.GRAVITY = 0.98 /20
+        self.PLAYER_STAMINA = 10
+        self.PLAYER_LIFE = 1
+        self.PLAYER_WIN = 0
+        self.PLAYER_POINTS = 0
+        self.food_points = 10
         
 
         #COLORS
@@ -153,6 +227,9 @@ class Game:
         self.GREEN   = (  0, 102,   0)
         self.DIRT    = ( 77,  38,   0)
         self.WET_DIRT= ( 45,  28,   0)
+        self.LIME    = (  6, 207,  60)
+        self.YELLOW  = (174, 196,  27)
+        self.RED     = (255,  10,  10)
 
         self.GREEN_1   = (  0, 130,   0)
         self.DIRT_1    = (156,  73,   0)
@@ -179,6 +256,8 @@ class Game:
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 pg.QUIT
                 sys.exit()
+            if event.type == pg.MOUSEBUTTONDOWN and self.PLAYER_LIFE == 0:
+                self.PLAYER_LIFE = 1
     
     def update(self):
         self.player.update()
@@ -220,8 +299,13 @@ class Game:
     def run(self):
             while True:
                 self.check_event()
-                self.update()
-                self.draw()
+                if self.PLAYER_LIFE:
+                    self.update()
+                    self.draw()
+                else:
+                    #Ded screen
+                    self.screen.fill(self.RED)
+                    pg.display.flip() 
             
 if __name__ == '__main__':
      game = Game()
