@@ -148,8 +148,11 @@ class Points:
     def __init__(self,game):
         self.game = game
         self.ground = (self.game.HEIGHT*2//3 - 10)
+        self.spawn_food()
+
+    def spawn_food(self):
         self.coord_list = []
-        self.food_points = 10
+        self.food_points = self.game.food_points
         self.bad_points = self.food_points // (10/self.game.DIFFICULTY)
         for i in range(self.food_points):
             x = random.randint(0,self.game.WIDTH)
@@ -176,6 +179,8 @@ class Points:
                 del self.coord_list[index]
                 self.game.PLAYER_SIZE += 10
                 self.game.PLAYER_POINTS += 1
+                if self.game.PLAYER_POINTS == self.food_points:
+                    self.game.PLAYER_WIN = 1
             else:
                 if random.randint(0,100) < 1:
                     coord[1] = 0
@@ -183,7 +188,7 @@ class Points:
                     coord[1] = 0
 
         for i_bad, coord_bad in enumerate(self.bad_coord_list):
-            coord_bad[1] += 1
+            coord_bad[1] += 2
             if (self.game.player.HB_player[0] < coord_bad[0] < self.game.player.HB_player[2]) and (self.game.player.HB_player[1] < coord_bad[1] < self.game.player.HB_player[3]):
                 del self.bad_coord_list[i_bad]
                 if self.game.PLAYER_SIZE <=20:
@@ -191,8 +196,6 @@ class Points:
                 else:
                     self.game.PLAYER_SIZE -= 20
             else:
-                if random.randint(0,100) < 1:
-                    coord_bad[1] = 0
                 if coord_bad[1] > self.game.floor:
                     coord_bad[1] = 0
             
@@ -256,7 +259,13 @@ class Game:
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 pg.QUIT
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN and self.PLAYER_LIFE == 0:
+            if event.type == pg.MOUSEBUTTONDOWN and (self.PLAYER_LIFE == 0 or self.PLAYER_WIN):
+                #Reset food
+                self.foods.spawn_food()
+                #reset_player
+                self.PLAYER_SIZE = 10
+                self.PLAYER_WIN = 0
+                self.PLAYER_POINTS = 0
                 self.PLAYER_LIFE = 1
     
     def update(self):
@@ -302,10 +311,15 @@ class Game:
                 if self.PLAYER_LIFE:
                     self.update()
                     self.draw()
+                    if self.PLAYER_WIN:
+                        self.screen.fill(self.GREEN_1)
+                        pg.display.flip() 
+                    
                 else:
                     #Ded screen
                     self.screen.fill(self.RED)
                     pg.display.flip() 
+
             
 if __name__ == '__main__':
      game = Game()
